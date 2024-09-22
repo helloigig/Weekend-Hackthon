@@ -3,6 +3,7 @@ body {
     -webkit-user-select: none;  /* Safari */
     -ms-user-select: none;      /* IE 10 and IE 11 */
     user-select: none;          /* Standard syntax */
+    overflow: hidden;           /* Prevent scrolling */
 }
 
 body, html {
@@ -10,21 +11,21 @@ body, html {
     padding: 0;
     width: 100%;
     height: 100%;
-    background-color: black
+    background-color: black;
 }
 
 /* Styles for the gallery page */
 #grid-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    position: relative;
+    position: absolute; /* Change to absolute for easier panning */
     width: 100%;
-    overflow: hidden;
     height: 100%;
+    overflow: hidden;
 }
 
 .punctuation-cell {
-    position: relative;
+    position: absolute; /* Change to absolute for easier panning */
     padding: 20px;
     text-align: center;
     font-size: 84px;
@@ -38,11 +39,10 @@ body, html {
     height: 100%; /* Set a fixed height */
     box-sizing: border-box; /* Include padding in height calculation */
 }
-.punctuation-cell :hover{
-    scale: 110%;
+
+.punctuation-cell:hover {
+    transform: scale(1.1); /* Use transform for scaling */
 }
-
-
 
 /* Styles for the detail page */
 body.detail-page {
@@ -50,8 +50,7 @@ body.detail-page {
 }
 
 .detail-page #grid-container {
-    position: relative;
-    overflow: hidden;
+    position: absolute;
     width: 100%;
     height: 100%;
 }
@@ -83,7 +82,6 @@ body.detail-page {
     text-align: center;
     vertical-align: top;
     height: 24px;
-
 }
 
 .detail-page .punctuation-cell a {

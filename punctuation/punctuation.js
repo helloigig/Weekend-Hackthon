@@ -1,4 +1,4 @@
-const cellSize = 120; // Size of each grid cell
+const cellSize = 140; // Size of each grid cell
 let offsetX = 0;
 let offsetY = 0;
 let container;
