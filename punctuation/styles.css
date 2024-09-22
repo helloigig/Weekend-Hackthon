@@ -71,16 +71,18 @@ body.detail-page {
 
 .detail-page .typeface-name {
     position: absolute;
-    bottom: -18px;
+    bottom: -12px;
     left: 0;
     right: 0;
     font-size: 12px;
     font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
     padding: 2px 0;
     margin: 0;
     opacity: 1;
     text-align: center;
     vertical-align: top;
+    height: 24px;
 
 }
 
