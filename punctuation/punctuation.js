@@ -5,6 +5,7 @@ let container;
 let visibleRows = 0;
 let visibleCols = 0;
 let fonts = [];
+let currentPunctuation; // Declare this at the top of your file
 
 const punctuationMarks = [
     '.', ',', '!', '?', ';', ':', '"', "'", 
@@ -16,7 +17,7 @@ const punctuationMarks = [
 async function fetchGoogleFonts() {
     const apiKey = 'AIzaSyA6PZkwawLTmdbkJlovi7bpMobyOUvsmZY';
     try {
-        const response = await fetch(`https://www.googleapis.com/webfonts/v1/webfonts?key=${apiKey}&sort=popularity`);
+        const response = await fetch(`https://www.googleapis.com/webfonts/v1/webfonts?key=${apiKey}&sort=popularity&subset=latin&fields=items(family,files)`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         return data.items || [];
@@ -27,7 +28,9 @@ async function fetchGoogleFonts() {
 }
 
 // Initialize the grid and setup the dragging mechanism
-async function createPunctuationPage(currentPunctuation) {
+async function createPunctuationPage(punctuation) {
+    currentPunctuation = punctuation; // Store the punctuation globally
+    console.log('Creating page with punctuation:', currentPunctuation);
     container = document.getElementById('grid-container');
     if (!container) {
         console.error('Grid container not found.');
@@ -36,7 +39,7 @@ async function createPunctuationPage(currentPunctuation) {
 
     fonts = await fetchGoogleFonts();
     setupGridDimensions();
-    createGrid(currentPunctuation);
+    createGrid();
     setupDraggableCanvas();
 }
 
@@ -47,7 +50,8 @@ function setupGridDimensions() {
 }
 
 // Create a visible grid with only the cells required to cover the viewport
-function createGrid(currentPunctuation) {
+function createGrid() {
+    console.log('Creating grid with punctuation:', currentPunctuation);
     container.innerHTML = ''; // Clear any previous grid
     container.style.position = 'relative';
     container.style.width = `${visibleCols * cellSize}px`;
@@ -58,15 +62,17 @@ function createGrid(currentPunctuation) {
     // Generate the visible grid cells
     for (let row = 0; row < visibleRows; row++) {
         for (let col = 0; col < visibleCols; col++) {
-            const cell = createCell(row, col, currentPunctuation, otherPunctuations);
+            const cell = createCell(row, col, otherPunctuations);
             container.appendChild(cell);
         }
     }
 }
 
 // Create individual cells with their content (punctuation and font)
-function createCell(row, col, currentPunctuation, otherPunctuations) {
-    const font = fonts[(row * visibleCols + col) % fonts.length];
+function createCell(row, col, otherPunctuations) {
+    console.log('Creating cell with punctuation:', currentPunctuation);
+    const fontIndex = (row * visibleCols + col) % fonts.length;
+    const font = fonts[fontIndex];
     const isCurrentPunctuation = Math.random() < 0.98; // 98% chance for current punctuation
     const isHomeLink = !isCurrentPunctuation && Math.random() < 0.1; // 10% chance for home link among non-current cells
 
@@ -81,26 +87,26 @@ function createCell(row, col, currentPunctuation, otherPunctuations) {
     cell.setAttribute('data-col', col);
     cell.setAttribute('data-font', font.family);
 
+    // Load the font
+    const fontUrl = font.files.regular || Object.values(font.files)[0];
+    const fontFace = new FontFace(font.family, `url(${fontUrl})`);
+    fontFace.load().then(() => {
+        document.fonts.add(fontFace);
+        cell.style.fontFamily = `'${font.family}', sans-serif`;
+    }).catch(err => console.error('Error loading font:', err));
+
     if (isCurrentPunctuation) {
         cell.innerHTML = `
-            <span style="font-family: '${font.family}', sans-serif;">${currentPunctuation}</span>
+            <span>${currentPunctuation || 'Error: undefined'}</span>
             <span class="typeface-name" style="display: none;">${font.family}</span>
         `;
         cell.addEventListener('mouseenter', showFontName);
         cell.addEventListener('mouseleave', hideFontName);
     } else if (isHomeLink) {
-        cell.innerHTML = `
-            <a href="index.html" style="text-decoration: none; color: inherit;">
-                <span style="font-family: '${font.family}', sans-serif;">H</span>
-            </a>
-        `;
+        cell.innerHTML = `<a href="index.html" style="text-decoration: none; color: inherit;">H</a>`;
     } else {
         const punctuation = otherPunctuations[Math.floor(Math.random() * otherPunctuations.length)];
-        cell.innerHTML = `
-            <a href="punctuation.html?mark=${encodeURIComponent(punctuation)}" style="text-decoration: none; color: inherit;">
-                <span style="font-family: '${font.family}', sans-serif;">${punctuation}</span>
-            </a>
-        `;
+        cell.innerHTML = `<a href="punctuation.html?mark=${encodeURIComponent(punctuation)}" style="text-decoration: none; color: inherit;">${punctuation}</a>`;
     }
 
     return cell;
@@ -164,7 +170,7 @@ function setupDraggableCanvas() {
     // Adjust the grid on window resize
     window.addEventListener('resize', () => {
         setupGridDimensions();
-        createGrid();
+        createGrid(); // No need to pass currentPunctuation here
     });
 }
 
@@ -210,12 +216,16 @@ function repositionCells(deltaX, deltaY) {
 
 // Initialize the grid on page load
 document.addEventListener('DOMContentLoaded', () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const punctuation = urlParams.get('mark');
-    if (punctuation) {
-        createPunctuationPage(punctuation);
-    } else {
-        console.error('No punctuation mark specified in URL.');
-        document.body.innerHTML = '<p>Error: No punctuation mark specified in URL.</p>';
-    }
+    setTimeout(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const punctuation = urlParams.get('mark');
+        console.log('Initial punctuation:', punctuation);
+
+        if (punctuation) {
+            createPunctuationPage(punctuation);
+        } else {
+            console.error('No punctuation mark specified in URL.');
+            document.body.innerHTML = '<p>Error: No punctuation mark specified in URL.</p>';
+        }
+    }, 0);
 });
