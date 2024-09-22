@@ -35,7 +35,7 @@ body, html {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: 100px; /* Set a fixed height */
+    height: 100%; /* Set a fixed height */
     box-sizing: border-box; /* Include padding in height calculation */
 }
 .punctuation-cell :hover{
@@ -71,7 +71,7 @@ body.detail-page {
 
 .detail-page .typeface-name {
     position: absolute;
-    bottom: -8px;
+    bottom: -18px;
     left: 0;
     right: 0;
     font-size: 12px;
@@ -80,6 +80,8 @@ body.detail-page {
     margin: 0;
     opacity: 1;
     text-align: center;
+    vertical-align: top;
+
 }
 
 .detail-page .punctuation-cell a {
