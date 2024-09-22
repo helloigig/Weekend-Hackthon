@@ -56,7 +56,7 @@ async function createHomePage() {
     const creditIndex = usedIndices.pop();
     const creditCell = container.children[creditIndex];
     creditCell.innerHTML = `
-        <span style="color: rgb(255, 238, 0); font-family: 'Courier New'; font-weight: bold; font-size: 10px; text-align: center; display: flex; align-items: center; justify-content: center; height: 100%;">
+        <span style="color: rgb(255, 238, 0); font-family: 'Courier New'; font-weight: bold; font-size: 11px; text-align: center; display: flex; align-items: center; justify-content: center; height: 100%;">
             Developed by gg&kw with love
         </span>
     `;
