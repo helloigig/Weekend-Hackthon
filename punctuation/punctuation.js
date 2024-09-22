@@ -131,47 +131,77 @@ function hideFontName(event) {
 // Setup the drag mechanism for infinite grid scrolling
 function setupDraggableCanvas() {
     let isDragging = false;
-    let lastX = 0;
-    let lastY = 0;
+    let startX, startY, lastX, lastY;
+    const dragThreshold = 10; // pixels
 
-    // Start dragging
-    container.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        lastX = e.clientX;
-        lastY = e.clientY;
-        container.style.cursor = 'grabbing';
-    });
+    // Start dragging (for both mouse and touch)
+    container.addEventListener('mousedown', startDragging);
+    container.addEventListener('touchstart', startDragging);
 
-    // Dragging behavior
-    container.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
+    // Dragging behavior (for both mouse and touch)
+    container.addEventListener('mousemove', drag);
+    container.addEventListener('touchmove', drag);
 
-        const dx = e.clientX - lastX;
-        const dy = e.clientY - lastY;
-        offsetX += dx;
-        offsetY += dy;
-
-        repositionCells(dx, dy);
-        lastX = e.clientX;
-        lastY = e.clientY;
-    });
-
-    // End dragging
-    container.addEventListener('mouseup', () => {
-        isDragging = false;
-        container.style.cursor = 'grab';
-    });
-
-    container.addEventListener('mouseleave', () => {
-        isDragging = false;
-        container.style.cursor = 'grab';
-    });
+    // End dragging (for both mouse and touch)
+    container.addEventListener('mouseup', endDragging);
+    container.addEventListener('touchend', endDragging);
+    container.addEventListener('mouseleave', endDragging);
+    container.addEventListener('touchcancel', endDragging);
 
     // Adjust the grid on window resize
     window.addEventListener('resize', () => {
         setupGridDimensions();
-        createGrid(); // No need to pass currentPunctuation here
+        createGrid();
     });
+
+    function startDragging(e) {
+        const point = e.touches ? e.touches[0] : e;
+        startX = lastX = point.clientX;
+        startY = lastY = point.clientY;
+        isDragging = true;
+        container.style.cursor = 'grabbing';
+        e.preventDefault(); // Prevent default touch behavior
+    }
+
+    function drag(e) {
+        if (!isDragging) return;
+
+        const point = e.touches ? e.touches[0] : e;
+        const clientX = point.clientX;
+        const clientY = point.clientY;
+
+        const dx = clientX - lastX;
+        const dy = clientY - lastY;
+
+        // Check if drag distance exceeds threshold
+        if (Math.abs(clientX - startX) > dragThreshold || Math.abs(clientY - startY) > dragThreshold) {
+            offsetX += dx;
+            offsetY += dy;
+            repositionCells(dx, dy);
+            lastX = clientX;
+            lastY = clientY;
+            e.preventDefault(); // Prevent default touch behavior only if actually dragging
+        }
+    }
+
+    function endDragging(e) {
+        if (isDragging) {
+            const point = e.changedTouches ? e.changedTouches[0] : e;
+            const endX = point.clientX;
+            const endY = point.clientY;
+
+            // If it's a small movement, treat it as a click
+            if (Math.abs(endX - startX) < dragThreshold && Math.abs(endY - startY) < dragThreshold) {
+                const clickedElement = document.elementFromPoint(endX, endY);
+                if (clickedElement && clickedElement.tagName === 'A') {
+                    clickedElement.click();
+                }
+            }
+        }
+
+        isDragging = false;
+        container.style.cursor = 'grab';
+    }
 }
 
 function repositionCells(deltaX, deltaY) {
@@ -223,6 +253,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (punctuation) {
             createPunctuationPage(punctuation);
+            // Add these lines to prevent default touch behavior
+            document.body.style.overflow = 'hidden';
+            document.body.style.touchAction = 'none';
         } else {
             console.error('No punctuation mark specified in URL.');
             document.body.innerHTML = '<p>Error: No punctuation mark specified in URL.</p>';

@@ -3,6 +3,7 @@ body {
     -webkit-user-select: none;  /* Safari */
     -ms-user-select: none;      /* IE 10 and IE 11 */
     user-select: none;          /* Standard syntax */
+    overflow: hidden; /* Prevent scrolling on the body */
 }
 
 body, html {
@@ -17,10 +18,9 @@ body, html {
 #grid-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    position: relative;
     width: 100%;
-    overflow: hidden;
     height: 100%;
+    overflow: auto; /* Allow scrolling within the container */
 }
 
 .punctuation-cell {
@@ -35,14 +35,13 @@ body, html {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: 100%; /* Set a fixed height */
+    height: 100px; /* Set a fixed height */
     box-sizing: border-box; /* Include padding in height calculation */
 }
-.punctuation-cell :hover{
-    scale: 110%;
+
+.punctuation-cell:hover {
+    transform: scale(1.1);
 }
-
-
 
 /* Styles for the detail page */
 body.detail-page {
