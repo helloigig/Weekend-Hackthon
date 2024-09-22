@@ -6,6 +6,12 @@ let visibleRows = 0;
 let visibleCols = 0;
 let fonts = [];
 
+const punctuationMarks = [
+    '.', ',', '!', '?', ';', ':', '"', "'", 
+    '()', '[]', '{}', 
+    '-', '_', '/', '&', '@', '#', '%', '*', '+', '=', '~'
+];
+
 // Fetch Google Fonts
 async function fetchGoogleFonts() {
     const apiKey = 'AIzaSyA6PZkwawLTmdbkJlovi7bpMobyOUvsmZY';
@@ -21,7 +27,7 @@ async function fetchGoogleFonts() {
 }
 
 // Initialize the grid and setup the dragging mechanism
-async function createPunctuationPage(punctuation) {
+async function createPunctuationPage(currentPunctuation) {
     container = document.getElementById('grid-container');
     if (!container) {
         console.error('Grid container not found.');
@@ -30,7 +36,7 @@ async function createPunctuationPage(punctuation) {
 
     fonts = await fetchGoogleFonts();
     setupGridDimensions();
-    createGrid(punctuation);
+    createGrid(currentPunctuation);
     setupDraggableCanvas();
 }
 
@@ -41,24 +47,28 @@ function setupGridDimensions() {
 }
 
 // Create a visible grid with only the cells required to cover the viewport
-function createGrid(punctuation) {
+function createGrid(currentPunctuation) {
     container.innerHTML = ''; // Clear any previous grid
     container.style.position = 'relative';
     container.style.width = `${visibleCols * cellSize}px`;
     container.style.height = `${visibleRows * cellSize}px`;
 
+    const otherPunctuations = punctuationMarks.filter(mark => mark !== currentPunctuation);
+
     // Generate the visible grid cells
     for (let row = 0; row < visibleRows; row++) {
         for (let col = 0; col < visibleCols; col++) {
-            const cell = createCell(row, col, punctuation);
+            const cell = createCell(row, col, currentPunctuation, otherPunctuations);
             container.appendChild(cell);
         }
     }
 }
 
 // Create individual cells with their content (punctuation and font)
-function createCell(row, col, punctuation) {
+function createCell(row, col, currentPunctuation, otherPunctuations) {
     const font = fonts[(row * visibleCols + col) % fonts.length];
+    const isCurrentPunctuation = Math.random() < 0.98; // 98% chance for current punctuation
+    const isHomeLink = !isCurrentPunctuation && Math.random() < 0.1; // 10% chance for home link among non-current cells
 
     const cell = document.createElement('div');
     cell.className = 'punctuation-cell';
@@ -69,11 +79,47 @@ function createCell(row, col, punctuation) {
     cell.style.top = `${row * cellSize}px`;
     cell.setAttribute('data-row', row);
     cell.setAttribute('data-col', col);
-    cell.innerHTML = `
-        <span style="font-family: '${font.family}', sans-serif;">${punctuation}</span>
-        <span class="typeface-name">${font.family}</span>
-    `;
+    cell.setAttribute('data-font', font.family);
+
+    if (isCurrentPunctuation) {
+        cell.innerHTML = `
+            <span style="font-family: '${font.family}', sans-serif;">${currentPunctuation}</span>
+            <span class="typeface-name" style="display: none;">${font.family}</span>
+        `;
+        cell.addEventListener('mouseenter', showFontName);
+        cell.addEventListener('mouseleave', hideFontName);
+    } else if (isHomeLink) {
+        cell.innerHTML = `
+            <a href="index.html" style="text-decoration: none; color: inherit;">
+                <span style="font-family: '${font.family}', sans-serif;">H</span>
+            </a>
+        `;
+    } else {
+        const punctuation = otherPunctuations[Math.floor(Math.random() * otherPunctuations.length)];
+        cell.innerHTML = `
+            <a href="punctuation.html?mark=${encodeURIComponent(punctuation)}" style="text-decoration: none; color: inherit;">
+                <span style="font-family: '${font.family}', sans-serif;">${punctuation}</span>
+            </a>
+        `;
+    }
+
     return cell;
+}
+
+// Function to show font name on hover
+function showFontName(event) {
+    const typefaceName = event.currentTarget.querySelector('.typeface-name');
+    if (typefaceName) {
+        typefaceName.style.display = 'block';
+    }
+}
+
+// Function to hide font name when not hovering
+function hideFontName(event) {
+    const typefaceName = event.currentTarget.querySelector('.typeface-name');
+    if (typefaceName) {
+        typefaceName.style.display = 'none';
+    }
 }
 
 // Setup the drag mechanism for infinite grid scrolling

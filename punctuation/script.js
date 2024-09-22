@@ -49,8 +49,17 @@ async function createHomePage() {
         [cellIndices[i], cellIndices[j]] = [cellIndices[j], cellIndices[i]];
     }
 
-    // Use only as many positions as there are punctuation marks
-    const usedIndices = cellIndices.slice(0, punctuationMarks.length);
+    // Use only as many positions as there are punctuation marks plus one for the credit text
+    const usedIndices = cellIndices.slice(0, punctuationMarks.length + 1);
+
+    // Add credit text to a random cell
+    const creditIndex = usedIndices.pop();
+    const creditCell = container.children[creditIndex];
+    creditCell.innerHTML = `
+        <span style="color: rgb(255, 238, 0); font-family: 'Courier New'; font-size: 10px; text-align: center; display: flex; align-items: center; justify-content: center; height: 100%;">
+            Developed by gg&kw with love
+        </span>
+    `;
 
     punctuationMarks.forEach((mark, index) => {
         const cellIndex = usedIndices[index];
@@ -62,6 +71,19 @@ async function createHomePage() {
             <span style="font-family: '${font.family}', sans-serif;">${mark}</span>
             <span class="typeface-name">${font.family}</span>
         `;
+        
+        // Hide the typeface name by default
+        cell.querySelector('.typeface-name').style.display = 'none';
+        
+        // Show typeface name on hover
+        cell.addEventListener('mouseenter', () => {
+            cell.querySelector('.typeface-name').style.display = 'none';
+        });
+        
+        // Hide typeface name when not hovering
+        cell.addEventListener('mouseleave', () => {
+            cell.querySelector('.typeface-name').style.display = 'none';
+        });
         
         cell.addEventListener('click', () => {
             window.location.href = `punctuation.html?mark=${encodeURIComponent(mark)}`;
